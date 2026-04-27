@@ -156,5 +156,15 @@ Generates human-friendly explanations and recommendations.
 Interactive dashboard shows final analysis.
 
 
+<img width="1919" height="1025" alt="Screenshot 2026-04-28 030531" src="https://github.com/user-attachments/assets/2e45ba7a-4615-41b5-8d0b-8313df0e8547" />
+<img width="1917" height="1027" alt="Screenshot 2026-04-28 030546" src="https://github.com/user-attachments/assets/43f90156-4da7-493d-858a-4e6ad2083d73" />
+
+<img width="1919" height="1030" alt="Screenshot 2026-04-28 031510" src="https://github.com/user-attachments/assets/77effc9a-0232-45e8-b08b-aaba5312024f" />
+<img width="1046" height="964" alt="Screenshot 2026-04-28 021644" src="https://github.com/user-attachments/assets/f6050266-5497-4979-b1d3-931bc5e41fb7" />
+
+<img width="514" height="503" alt="Screenshot 2026-04-28 030706" src="https://github.com/user-attachments/assets/8057f0d3-88cb-41e7-af0e-682f31ca22b6" />
+
+
+
 
 
