@@ -1,0 +1,19 @@
+# Backend — don't upload these to GitHub
+backend/venv/
+backend/__pycache__/
+backend/.env
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/uploads/
+
+# Frontend — don't upload these to GitHub
+frontend/node_modules/
+frontend/.next/
+frontend/.env.local
+frontend/.env
+
+# General
+.env
+.DS_Store
+*.log
+Thumbs.db
