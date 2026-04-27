@@ -68,7 +68,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://*.vercel.app",  # This is the crucial line for Vercel!
+        "https://resume-ranker-gules.vercel.app"  # Your exact Vercel URL here!
     ],
     allow_credentials=True,
     allow_methods=["*"],
