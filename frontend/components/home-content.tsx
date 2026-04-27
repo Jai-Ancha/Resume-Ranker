@@ -51,11 +51,11 @@ export function HomeContent() {
     setStatus("loading")
 
     try {
-      // 1. Pack the UI data into a FormData object (just like Postman does)
+      // 1. Pack the UI data into a FormData object
       const formData = new FormData()
       formData.append("job_description", localJd)
       localFiles.forEach((file) => {
-        formData.append("resumes", file) // FastAPI expects the list to be called "resumes"
+        formData.append("resumes", file) 
       })
 
       // Move UI progress bar to "Creating embeddings..."
@@ -77,29 +77,52 @@ export function HomeContent() {
       // 3. Receive the JSON from FastAPI
       const backendData = await response.json()
 
-      // 4. Map the backend JSON to fit the UI's CandidateData structure
-      const realCandidates = backendData.rankings.map((r: any, index: number) => ({
-        id: `cand-${index}`,
-        rank: r.rank,
-        filename: r.filename,
-        matchPercentage: Math.round(r.match_percentage),
-        atsScore: r.ats_score || Math.round(r.match_percentage),
-        verdict: r.verdict,
-        matchedSkills: r.matched_skills || [],
-        missingSkills: r.missing_skills || [],
-        experienceAlignment: r.experience_alignment || "See detailed analysis for experience breakdown.",
-        strengths: r.strengths || [],
-        improvements: r.improvements || [],
-        interviewRecommendation: r.interview_recommendation ? "Recommended" : "Not Recommended",
+      // --- DEFENSIVE UI SHIELD STARTS HERE ---
+      // Safety check: if OpenRouter failed, stop here so React doesn't crash
+      if (!backendData || !backendData.rankings || backendData.rankings.length === 0) {
+        throw new Error("Empty response from backend")
+      }
+
+      // 4. Map the backend JSON to fit the UI safely
+      const realCandidates = backendData.rankings.map((r: any, index: number) => {
+        const safeMatchPercentage = r.match_percentage ?? 50;
         
-        // Supplying temporary baseline breakdown values since our /rank-with-ai doesn't natively return the deep /ats-analysis breakdown yet
-        atsBreakdown: {
-          skillsMatch: Math.round(r.match_percentage),
-          experienceMatch: r.ats_score || Math.round(r.match_percentage),
-          educationMatch: 85,
-          keywordDensity: Math.round(r.match_percentage - 5)
-        }
-      }))
+        return {
+          id: `cand-${index}`,
+          rank: r.rank ?? index + 1,
+          filename: r.filename ?? `Resume_${index + 1}.pdf`,
+          matchPercentage: Math.round(safeMatchPercentage),
+          atsScore: r.ats_score ?? Math.round(safeMatchPercentage),
+          
+          // Verdict normalization
+          verdict: (["STRONG MATCH", "GOOD MATCH", "WEAK MATCH"].includes(r.verdict))
+            ? r.verdict
+            : safeMatchPercentage >= 70 ? "STRONG MATCH"
+            : safeMatchPercentage >= 50 ? "GOOD MATCH" 
+            : "WEAK MATCH",
+          
+          matchedSkills: Array.isArray(r.matched_skills) ? r.matched_skills : [],
+          missingSkills: Array.isArray(r.missing_skills) ? r.missing_skills : [],
+          experienceAlignment: r.experience_alignment ?? "See resume for details.",
+          strengths: Array.isArray(r.strengths) ? r.strengths : [],
+          improvements: Array.isArray(r.improvements) ? r.improvements : [],
+          
+          // Interview recommendation handling
+          interviewRecommendation: (r.interview_recommendation === true || 
+            r.interview_recommendation === "Recommended" ||
+            r.interview_recommendation === "Highly Recommended")
+            ? "Recommended" 
+            : "Not Recommended",
+          
+          atsBreakdown: {
+            skillsMatch: Math.round(safeMatchPercentage),
+            experienceMatch: r.ats_score ?? Math.round(safeMatchPercentage),
+            educationMatch: 85,
+            keywordDensity: Math.max(0, Math.round(safeMatchPercentage - 5))
+          }
+        };
+      })
+      // --- DEFENSIVE UI SHIELD ENDS HERE ---
 
       setCurrentStep(4) // Mark loading as fully complete
 
