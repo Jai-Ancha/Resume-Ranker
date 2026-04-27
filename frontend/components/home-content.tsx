@@ -95,10 +95,9 @@ export function HomeContent() {
           atsScore: r.ats_score ?? Math.round(safeMatchPercentage),
           
           // Verdict normalization
-          verdict: (["STRONG MATCH", "GOOD MATCH", "WEAK MATCH"].includes(r.verdict))
-            ? r.verdict
-            : safeMatchPercentage >= 70 ? "STRONG MATCH"
-            : safeMatchPercentage >= 50 ? "GOOD MATCH" 
+          // Force verdict mathematically to prevent AI hallucinations
+          verdict: safeMatchPercentage >= 65 ? "STRONG MATCH"
+            : safeMatchPercentage >= 45 ? "GOOD MATCH" 
             : "WEAK MATCH",
           
           matchedSkills: Array.isArray(r.matched_skills) ? r.matched_skills : [],
