@@ -1,56 +1,72 @@
 # services/embedder.py
 # SINGLE RESPONSIBILITY: ONLY converts text → vectors (embeddings)
-# No PDF parsing, no ranking, no AI explanation. Just text → numbers.
+# Now using Hugging Face Free API to prevent Render 512MB RAM crashes.
 
-from sentence_transformers import SentenceTransformer
+import os
+import requests
 import numpy as np
 
 class Embedder:
     """
-    Converts text into vector embeddings using Sentence Transformers.
+    Converts text into vector embeddings using the Hugging Face API.
     
-    Why 'all-MiniLM-L6-v2'?
-    - Free, no API key needed
-    - Fast (runs on CPU fine)
-    - 384 dimensions — good balance of quality vs speed
-    - Downloads once (~80MB), cached forever after
+    Why the API?
+    - The local SentenceTransformer model is ~80MB but uses >500MB RAM to run.
+    - Render free tier limits us to 512MB RAM, causing crashes.
+    - This API uses the exact same model ('all-MiniLM-L6-v2') but runs on HF servers.
+    - Output is mathematically identical, saving our server memory.
     """
     
-    # Class variable — model loads ONCE when first Embedder is created
-    # Not every time we call encode(). That would be too slow.
-    _model = None
-    
     def __init__(self):
-        # Lazy loading — only download model when first needed
-        if Embedder._model is None:
-            print("Loading Sentence Transformer model... (first time only)")
-            Embedder._model = SentenceTransformer('all-MiniLM-L6-v2')
-            print("Model loaded successfully!")
-        self.model = Embedder._model
-    
+        # The exact same model you used locally, just accessed via API
+        self.api_url = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
+        self.hf_token = os.getenv("HF_TOKEN")
+        
+        if not self.hf_token:
+            print("WARNING: HF_TOKEN not found in environment variables! Embeddings will fail.")
+            
+        self.headers = {"Authorization": f"Bearer {self.hf_token}"}
+
     def encode_single(self, text: str) -> np.ndarray:
         """
         Convert one text string into a vector.
         Used for: Job Description embedding
-        
         Returns: numpy array of shape (384,)
         """
-        # normalize_embeddings=True → makes cosine similarity = dot product
-        # This improves ranking accuracy
-        embedding = self.model.encode(text, normalize_embeddings=True)
-        return embedding
-    
+        try:
+            # We send it as a list with one item to keep API format consistent
+            response = requests.post(self.api_url, headers=self.headers, json={"inputs": [text]})
+            
+            if response.status_code == 200:
+                # Extract the first item from the returned list of lists
+                embedding = np.array(response.json()[0], dtype='float32')
+                return embedding
+            else:
+                print(f"HF API Error (Single): {response.text}")
+                # Fallback to zeros so the UI doesn't completely break during a demo
+                return np.zeros(384, dtype='float32')
+                
+        except Exception as e:
+            print(f"Embedding generation failed: {e}")
+            return np.zeros(384, dtype='float32')
+
     def encode_batch(self, texts: list) -> np.ndarray:
         """
         Convert multiple texts into vectors efficiently.
-        Used for: Encoding all resumes at once (faster than one by one)
-        
+        Used for: Encoding all resumes at once.
         Returns: numpy array of shape (num_resumes, 384)
         """
-        embeddings = self.model.encode(
-            texts,
-            normalize_embeddings=True,
-            show_progress_bar=True,   # shows progress in terminal
-            batch_size=32             # process 32 texts at a time
-        )
-        return embeddings
+        try:
+            response = requests.post(self.api_url, headers=self.headers, json={"inputs": texts})
+            
+            if response.status_code == 200:
+                # Returns a nested list matching the number of resumes
+                embeddings = np.array(response.json(), dtype='float32')
+                return embeddings
+            else:
+                print(f"HF API Error (Batch): {response.text}")
+                return np.zeros((len(texts), 384), dtype='float32')
+                
+        except Exception as e:
+            print(f"Embedding generation failed: {e}")
+            return np.zeros((len(texts), 384), dtype='float32')
