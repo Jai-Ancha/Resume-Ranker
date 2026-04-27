@@ -3,7 +3,7 @@ uvicorn[standard]==0.24.0
 python-multipart==0.0.26
 pymupdf==1.27.2.2
 sentence-transformers==2.2.2
-faiss-cpu==1.7.4
+faiss-cpu
 python-dotenv==1.2.2
 numpy==1.26.4
 requests==2.31.0
