@@ -253,13 +253,18 @@ export function HomeContent() {
             </motion.div>
           )}
           {status === "idle" && (
-            <motion.p
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="mt-3 text-center text-sm text-muted-foreground"
+              className="mt-4 flex flex-col items-center gap-2 text-center"
             >
-              AI will rank and score each resume against the job description
-            </motion.p>
+              <p className="text-sm text-muted-foreground">
+                AI will rank and score each resume against the job description
+              </p>
+              <div className="max-w-md rounded-md bg-yellow-500/10 border border-yellow-500/20 p-2 text-xs text-yellow-700 dark:text-yellow-400">
+                <span className="font-semibold">⚠️ Free Tier Notice:</span> To prevent AI timeouts, please use concise Job Descriptions and limit to 1-2 resumes per analysis. Enterprise paid APIs would process bulk batches instantly.
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
