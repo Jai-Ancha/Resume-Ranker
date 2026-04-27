@@ -19,7 +19,7 @@ class Embedder:
     
     def __init__(self):
         # The exact same model you used locally, just accessed via API
-        self.api_url = "https://api-inference.huggingface.co/pipeline/feature-extraction/sentence-transformers/all-MiniLM-L6-v2"
+        self.api_url = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
         self.hf_token = os.getenv("HF_TOKEN")
         
         if not self.hf_token:
